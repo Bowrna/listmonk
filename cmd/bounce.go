@@ -11,27 +11,30 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// GetBounces handles retrieval of bounce records.
-func (a *App) GetBounces(c echo.Context) error {
+// GetBounce handles retrieval of a specific bounce record by ID.
+func (a *App) GetBounce(c echo.Context) error {
 	// Fetch one bounce from the DB.
-	id, _ := strconv.Atoi(c.Param("id"))
-	if id > 0 {
-		out, err := a.core.GetBounce(id)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(http.StatusOK, okResp{out})
+	id := getID(c)
+	out, err := a.core.GetBounce(id)
+	if err != nil {
+		return err
 	}
 
-	// Query and fetch bounces from the DB.
+	return c.JSON(http.StatusOK, okResp{out})
+}
+
+// GetBounces handles retrieval of bounce records.
+func (a *App) GetBounces(c echo.Context) error {
 	var (
-		pg        = a.pg.NewFromURL(c.Request().URL.Query())
 		campID, _ = strconv.Atoi(c.QueryParam("campaign_id"))
 		source    = c.FormValue("source")
 		orderBy   = c.FormValue("order_by")
 		order     = c.FormValue("order")
+
+		pg = a.pg.NewFromURL(c.Request().URL.Query())
 	)
+
+	// Query and fetch bounces from the DB.
 	res, total, err := a.core.QueryBounces(campID, 0, source, orderBy, order, pg.Offset, pg.Limit)
 	if err != nil {
 		return err
@@ -54,12 +57,8 @@ func (a *App) GetBounces(c echo.Context) error {
 
 // GetSubscriberBounces retrieves a subscriber's bounce records.
 func (a *App) GetSubscriberBounces(c echo.Context) error {
-	subID, _ := strconv.Atoi(c.Param("id"))
-	if subID < 1 {
-		return echo.NewHTTPError(http.StatusBadRequest, a.i18n.T("globals.messages.invalidID"))
-	}
-
 	// Query and fetch bounces from the DB.
+	subID := getID(c)
 	out, _, err := a.core.QueryBounces(0, subID, "", "", "", 0, 1000)
 	if err != nil {
 		return err
@@ -68,6 +67,7 @@ func (a *App) GetSubscriberBounces(c echo.Context) error {
 	return c.JSON(http.StatusOK, okResp{out})
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 // handleDeleteBounces handles bounce deletion, either a single one (ID in the URI), or a list.
 func handleDeleteBounces(c echo.Context) error {
@@ -86,26 +86,24 @@ func (a *App) DeleteBounces(c echo.Context) error {
 	var (
 		all, _ = strconv.ParseBool(c.QueryParam("all"))
 		idStr  = c.Param("id")
+=======
+// DeleteBounces handles bounce deletion of a list.
+func (a *App) DeleteBounces(c echo.Context) error {
+	all, _ := strconv.ParseBool(c.QueryParam("all"))
+>>>>>>> 0826f401 (Remove repetitive URL param `:id` validation and simplify handlers.)
 
-		ids = []int{}
-	)
-	if idStr != "" {
-		id, _ := strconv.Atoi(idStr)
-		if id < 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, a.i18n.T("globals.messages.invalidID"))
-		}
-		ids = append(ids, id)
-	} else if !all {
+	var ids []int
+	if !all {
 		// There are multiple IDs in the query string.
-		i, err := parseStringIDs(c.Request().URL.Query()["id"])
+		res, err := parseStringIDs(c.Request().URL.Query()["id"])
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, a.i18n.Ts("globals.messages.invalidID", "error", err.Error()))
 		}
-
-		if len(i) == 0 {
+		if len(res) == 0 {
 			return echo.NewHTTPError(http.StatusBadRequest, a.i18n.Ts("globals.messages.invalidID"))
 		}
-		ids = i
+
+		ids = res
 	}
 
 	// Delete bounces from the DB.
@@ -116,6 +114,7 @@ func (a *App) DeleteBounces(c echo.Context) error {
 	return c.JSON(http.StatusOK, okResp{true})
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 func handleBlocklistSubscriberBounces(c echo.Context) error {
 	var (
@@ -160,6 +159,19 @@ func handleBounceWebhook(c echo.Context) error {
 	)
 
 =======
+=======
+// DeleteBounce handles bounce deletion of a single bounce record.
+func (a *App) DeleteBounce(c echo.Context) error {
+	// Delete bounces from the DB.
+	id := getID(c)
+	if err := a.core.DeleteBounces([]int{id}); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, okResp{true})
+}
+
+>>>>>>> 0826f401 (Remove repetitive URL param `:id` validation and simplify handlers.)
 // BounceWebhook renders the HTML preview of a template.
 <<<<<<< HEAD
 func (h *Handlers) BounceWebhook(c echo.Context) error {
