@@ -124,7 +124,8 @@ func initHTTPHandlers(e *echo.Echo, a *App) {
 		g.GET("/api/bounces/:id", pm(hasID(a.GetBounce), "bounces:get"))
 		g.DELETE("/api/bounces", pm(a.DeleteBounces, "bounces:manage"))
 		g.DELETE("/api/bounces/:id", pm(hasID(a.DeleteBounce), "bounces:manage"))
-
+		g.PUT("/api/bounces/blocklist", pm(a.BlocklistSubscriberBounces, "bounces:manage"))
+		g.PUT("/api/bounces/:id/blocklist", pm(a.BlocklistSubscriberBounces, "bounces:manage"))
 		// Subscriber operations based on arbitrary SQL queries.
 		// These aren't very REST-like.
 		g.POST("/api/subscribers/query/delete", pm(a.DeleteSubscribersByQuery, "subscribers:manage"))
